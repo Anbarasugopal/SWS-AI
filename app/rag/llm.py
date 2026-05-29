@@ -149,6 +149,8 @@ def extractive_answer(question: str, chunks: list[RetrievalResult]) -> str:
             continue
         seen.add(lowered)
         selected.append(f"{cleaned} ({title})")
+        if len(selected) == 1 and ";" in cleaned and len(cleaned) > 120:
+            break
         if len(selected) == 3:
             break
 
@@ -163,6 +165,14 @@ def _segments(text: str) -> list[str]:
     for index, line in enumerate(lines):
         if re.match(r"^[a-z]\s", line):
             continue
+        if line.endswith(":") and index + 1 < len(lines):
+            following = []
+            for next_line in lines[index + 1 : index + 7]:
+                if re.match(r"^[a-z]\s", next_line):
+                    continue
+                following.append(next_line)
+            if following:
+                segments.append(f"{line} {'; '.join(following)}")
         parts = [part.strip() for part in re.split(r"(?<=[.!?])\s+", line) if part.strip()]
         for part in parts:
             segments.append(part)
