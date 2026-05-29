@@ -1,13 +1,14 @@
 from pathlib import Path
+import re
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import ROOT_DIR, get_settings
 from app.rag.service import RAGService
-from app.schemas import ChatRequest, ChatResponse, HealthResponse, SourceDocument
+from app.schemas import ChatRequest, ChatResponse, HealthResponse, SourceDocument, UploadResponse
 
 
 settings = get_settings()
@@ -48,6 +49,28 @@ def sources() -> list[SourceDocument]:
     return [SourceDocument(**source) for source in rag_service.source_documents()]
 
 
+@app.post("/api/documents", response_model=UploadResponse)
+async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
+    filename = safe_pdf_filename(file.filename or "")
+    if not filename:
+        raise HTTPException(status_code=400, detail="Upload a PDF file.")
+
+    settings.pdf_dir.mkdir(parents=True, exist_ok=True)
+    destination = settings.pdf_dir / filename
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="The uploaded PDF is empty.")
+    destination.write_bytes(content)
+
+    try:
+        result = rag_service.ingest_pdf(destination)
+    except Exception as exc:
+        destination.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail=f"Could not ingest PDF: {exc}") from exc
+
+    return UploadResponse(**result)
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
     if rag_service.chunk_count() == 0:
@@ -66,3 +89,13 @@ def spa_fallback(path: str) -> FileResponse:
     if requested.suffix:
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(static_dir / "index.html")
+
+
+def safe_pdf_filename(filename: str) -> str | None:
+    name = Path(filename).name.strip()
+    if not name.lower().endswith(".pdf"):
+        return None
+    sanitized = re.sub(r"[^A-Za-z0-9._-]+", "-", name).strip(".-")
+    if not sanitized or sanitized.lower() == ".pdf":
+        return None
+    return sanitized

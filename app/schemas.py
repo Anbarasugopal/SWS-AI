@@ -37,3 +37,9 @@ class SourceDocument(BaseModel):
     title: str
     chunks: int
     pages: list[int]
+
+
+class UploadResponse(BaseModel):
+    document: SourceDocument
+    chunk_count: int
+    total_chunks: int

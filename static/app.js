@@ -5,6 +5,11 @@ const sendButton = document.querySelector("#send-button");
 const healthPill = document.querySelector("#health-pill");
 const sourceList = document.querySelector("#source-list");
 const docCount = document.querySelector("#doc-count");
+const uploadForm = document.querySelector("#upload-form");
+const uploadInput = document.querySelector("#document-upload");
+const uploadButton = document.querySelector("#upload-button");
+const uploadLabel = document.querySelector("#upload-label");
+const uploadStatus = document.querySelector("#upload-status");
 
 const noInfoText = "I don't have that information in the company documents.";
 
@@ -62,6 +67,11 @@ function appendLoading() {
   return article;
 }
 
+function setUploadStatus(message, type = "") {
+  uploadStatus.textContent = message;
+  uploadStatus.className = `upload-status ${type}`.trim();
+}
+
 async function loadHealth() {
   try {
     const response = await fetch("/api/health");
@@ -87,7 +97,7 @@ async function loadSources() {
           <div class="doc-row">
             <div>
               <strong>${escapeHtml(source.title)}</strong>
-              <span>${source.pages.length} page${source.pages.length === 1 ? "" : "s"} · ${source.chunks} chunks</span>
+              <span>${source.pages.length} page${source.pages.length === 1 ? "" : "s"} | ${source.chunks} chunks</span>
             </div>
           </div>
         `
@@ -96,6 +106,39 @@ async function loadSources() {
   } catch {
     docCount.textContent = "Unavailable";
     sourceList.innerHTML = "";
+  }
+}
+
+async function uploadDocument() {
+  const file = uploadInput.files?.[0];
+  if (!file) {
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  uploadButton.disabled = true;
+  setUploadStatus("Uploading and indexing...");
+
+  try {
+    const response = await fetch("/api/documents", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || "Could not upload the PDF.");
+    }
+
+    const payload = await response.json();
+    setUploadStatus(`Indexed ${payload.document.title}`, "success");
+    uploadInput.value = "";
+    uploadLabel.textContent = "Choose PDF";
+    await Promise.all([loadHealth(), loadSources()]);
+  } catch (error) {
+    setUploadStatus(error.message || "Could not upload the PDF.", "error");
+    uploadButton.disabled = false;
   }
 }
 
@@ -137,6 +180,18 @@ form.addEventListener("submit", (event) => {
   if (question) {
     ask(question);
   }
+});
+
+uploadInput.addEventListener("change", () => {
+  const file = uploadInput.files?.[0];
+  uploadButton.disabled = !file;
+  uploadLabel.textContent = file ? file.name : "Choose PDF";
+  setUploadStatus("");
+});
+
+uploadForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  uploadDocument();
 });
 
 textarea.addEventListener("input", () => {

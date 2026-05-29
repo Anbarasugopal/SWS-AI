@@ -8,6 +8,7 @@ A Python RAG chatbot for answering employee questions from the 10 SWS AI company
 - FastAPI backend with `POST /api/chat`
 - A white and blue Livvic chat UI served by the backend
 - Source documents and pages returned with every answer
+- PDF upload from the UI with immediate indexing into the vector store
 
 ## Project Structure
 
@@ -66,6 +67,17 @@ Content-Type: application/json
   "question": "How many days of sick leave do employees get?"
 }
 ```
+
+Upload and index a new PDF:
+
+```http
+POST /api/documents
+Content-Type: multipart/form-data
+
+file=@your-policy.pdf
+```
+
+Uploaded PDFs are saved into `data/pdfs`. If a file with the same name already exists, its old chunks are removed from Qdrant before the replacement is indexed.
 
 Response:
 

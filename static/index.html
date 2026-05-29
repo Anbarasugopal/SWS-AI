@@ -22,7 +22,25 @@
           </div>
         </div>
 
-        <section class="panel">
+        <section class="panel upload-panel">
+          <div class="panel-heading">
+            <span>Add Document</span>
+          </div>
+          <form id="upload-form" class="upload-form">
+            <input id="document-upload" type="file" name="file" accept="application/pdf,.pdf" />
+            <label for="document-upload" class="upload-button">
+              <i data-lucide="file-up" aria-hidden="true"></i>
+              <span id="upload-label">Choose PDF</span>
+            </label>
+            <button id="upload-button" type="submit" disabled>
+              <i data-lucide="upload-cloud" aria-hidden="true"></i>
+              <span>Upload</span>
+            </button>
+            <p id="upload-status" class="upload-status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="panel documents-panel">
           <div class="panel-heading">
             <span>Documents</span>
             <span id="doc-count" class="muted">Loading</span>

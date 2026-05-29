@@ -6,7 +6,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from fastembed import TextEmbedding
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
+from qdrant_client.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
 from app.config import Settings
 from app.rag.documents import DocumentChunk
@@ -42,6 +42,21 @@ class QdrantVectorStore:
         if self.client.collection_exists(self.settings.collection_name):
             self.client.delete_collection(self.settings.collection_name)
         self._ensure_collection()
+
+    def delete_source(self, source: str) -> None:
+        if self.count() == 0:
+            return
+        self.client.delete(
+            collection_name=self.settings.collection_name,
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="source",
+                        match=MatchValue(value=source),
+                    )
+                ]
+            ),
+        )
 
     def add_chunks(self, chunks: list[DocumentChunk], batch_size: int = 96) -> None:
         for start in range(0, len(chunks), batch_size):
