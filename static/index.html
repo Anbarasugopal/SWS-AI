@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SWS AI Policy Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Livvic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar" aria-label="Document and prompt shortcuts">
+        <div class="brand">
+          <div class="brand-mark">S</div>
+          <div>
+            <p class="eyebrow">SWS AI</p>
+            <h1>Policy Assistant</h1>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <span>Documents</span>
+            <span id="doc-count" class="muted">Loading</span>
+          </div>
+          <div id="source-list" class="source-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <span>Try</span>
+          </div>
+          <div class="prompt-list">
+            <button type="button" class="prompt-chip">How many days of sick leave do employees get?</button>
+            <button type="button" class="prompt-chip">What is the notice period for resignation?</button>
+            <button type="button" class="prompt-chip">What is the password policy for company systems?</button>
+            <button type="button" class="prompt-chip">Does SWS AI offer health insurance?</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="chat-area" aria-label="Chat">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">RAG Chatbot</p>
+            <h2>Ask a company policy question</h2>
+          </div>
+          <div id="health-pill" class="health-pill">Checking index</div>
+        </header>
+
+        <div id="thread" class="thread" aria-live="polite">
+          <article class="message assistant">
+            <div class="bubble">
+              <p>Hi, I can answer questions from the SWS AI company documents and show the sources I used.</p>
+            </div>
+          </article>
+        </div>
+
+        <form id="chat-form" class="composer">
+          <label for="question" class="sr-only">Question</label>
+          <textarea id="question" name="question" rows="1" placeholder="Ask about leave, benefits, WFH, security, reviews..." required></textarea>
+          <button id="send-button" type="submit" aria-label="Send question">
+            <i data-lucide="send-horizontal" aria-hidden="true"></i>
+            <span>Send</span>
+          </button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
